@@ -1,12 +1,14 @@
 <script setup>
 import { ref } from 'vue'
 
+const emit = defineEmits(["loginSuccess"])
 const activeModal = ref(null)
 const username = ref('')
 const name = ref('')
 const phone = ref('')
 const website = ref('')
 const company = ref('')
+const address = ref('') // Kayıt formuna address alanı eklendi
 const email = ref('')
 const password = ref('')
 const message = ref('')
@@ -19,6 +21,7 @@ const openModal = (type) => {
   phone.value = ''
   website.value = ''
   company.value = ''
+  address.value = ''
   email.value = ''
   password.value = ''
   message.value = ''
@@ -43,6 +46,7 @@ const handleSubmit = async () => {
         phone: phone.value,
         website: website.value,
         company: company.value,
+        address: address.value, // Backend'in beklediği 'address' ismiyle gönderiliyor
         email: email.value,
         password: password.value
       }
@@ -76,10 +80,15 @@ const handleSubmit = async () => {
 
       if (activeModal.value === 'login' && data.access) {
         localStorage.setItem('access_token', data.access)
+        localStorage.setItem('user_name', username.value)
       }
 
       setTimeout(() => {
+        const isLogin = activeModal.value === 'login'
         closeModal()
+        if (isLogin) {
+          emit('loginSuccess')
+        }
       }, 1500)
     } else {
       isError.value = true
@@ -136,13 +145,18 @@ const handleSubmit = async () => {
             </div>
 
             <div class="form-group">
-              <label>Website (İsteğe Bağlı)</label>
-              <input type="url" v-model="website" placeholder="https://ornek.com" />
+              <label>Şirket (Company)</label>
+              <input type="text" v-model="company" placeholder="Şirket Adı" />
             </div>
 
             <div class="form-group">
-              <label>Şirket (Company)</label>
-              <input type="text" v-model="company" placeholder="Şirket Adı" />
+              <label>Konum / Adres (Address)</label>
+              <input type="text" v-model="address" placeholder="Şehir veya Adres" />
+            </div>
+
+            <div class="form-group">
+              <label>Website (İsteğe Bağlı)</label>
+              <input type="url" v-model="website" placeholder="https://ornek.com" />
             </div>
 
             <div class="form-group">

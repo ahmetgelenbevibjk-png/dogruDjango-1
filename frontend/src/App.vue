@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import Account from './components/Account.vue'
-import DashboardLayout from './components/DashboardLayout.vue'
+import Account from './modules/users/pages/Account.vue'
+import DashboardLayout from './components/layout/DashboardLayout.vue'
 
 const isLoggedIn = ref(false)
 

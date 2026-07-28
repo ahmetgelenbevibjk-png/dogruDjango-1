@@ -1,5 +1,7 @@
 <script setup>
 import { ref } from 'vue'
+import userService from '@/modules/users/services/userService'
+import api from '@/services/api' // Token / Giriş işlemleri için merkezi api servisi
 
 const emit = defineEmits(["loginSuccess"])
 const activeModal = ref(null)
@@ -8,7 +10,7 @@ const name = ref('')
 const phone = ref('')
 const website = ref('')
 const company = ref('')
-const address = ref('') // Kayıt formuna address alanı eklendi
+const address = ref('')
 const email = ref('')
 const password = ref('')
 const message = ref('')
@@ -35,10 +37,6 @@ const handleSubmit = async () => {
   message.value = ''
   isError.value = false
 
-  const endpoint = activeModal.value === 'register'
-    ? 'http://127.0.0.1:8000/api/users/'
-    : 'http://127.0.0.1:8000/api/token/'
-
   const requestBody = activeModal.value === 'register'
     ? {
         username: username.value,
@@ -46,7 +44,7 @@ const handleSubmit = async () => {
         phone: phone.value,
         website: website.value,
         company: company.value,
-        address: address.value, // Backend'in beklediği 'address' ismiyle gönderiliyor
+        address: address.value,
         email: email.value,
         password: password.value
       }
@@ -56,47 +54,40 @@ const handleSubmit = async () => {
       }
 
   try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    })
+    let response
 
-    const responseText = await response.text()
-    let data
-    try {
-      data = JSON.parse(responseText)
-    } catch (e) {
-      data = { detail: responseText }
-    }
-
-    if (response.ok) {
-      isError.value = false
-      message.value = activeModal.value === 'register'
-        ? 'Kayıt başarıyla oluşturuldu!'
-        : 'Giriş başarılı!'
-
-      if (activeModal.value === 'login' && data.access) {
-        localStorage.setItem('access_token', data.access)
-        localStorage.setItem('user_name', username.value)
-      }
-
-      setTimeout(() => {
-        const isLogin = activeModal.value === 'login'
-        closeModal()
-        if (isLogin) {
-          emit('loginSuccess')
-        }
-      }, 1500)
+    if (activeModal.value === 'register') {
+      // userService üzerinden kayıt isteği (baseService'in create metodunu kullanır)
+      response = await userService.create(requestBody)
     } else {
-      isError.value = true
-      message.value = data.error || data.detail || JSON.stringify(data) || 'Bir hata oluştu.'
+      // Giriş (Token) isteği için merkezi api servisini kullanıyoruz
+      response = await api.post('token/', requestBody)
     }
+
+    const data = response.data
+
+    isError.value = false
+    message.value = activeModal.value === 'register'
+      ? 'Kayıt başarıyla oluşturuldu!'
+      : 'Giriş başarılı!'
+
+    if (activeModal.value === 'login' && data.access) {
+      localStorage.setItem('access_token', data.access)
+      localStorage.setItem('user_name', username.value)
+    }
+
+    setTimeout(() => {
+      const isLogin = activeModal.value === 'login'
+      closeModal()
+      if (isLogin) {
+        emit('loginSuccess')
+      }
+    }, 1500)
+
   } catch (err) {
     isError.value = true
-    message.value = 'Sunucuya bağlanılamadı: ' + err.message
+    const responseData = err.response?.data
+    message.value = responseData?.error || responseData?.detail || (typeof responseData === 'object' ? JSON.stringify(responseData) : null) || 'Sunucuya bağlanılamadı: ' + err.message
   }
 }
 </script>

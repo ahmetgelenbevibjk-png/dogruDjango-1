@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import todosService from '@/modules/Todos/services/todosService.js'
 
 const todos = ref([])
 const newTodoTitle = ref('')
@@ -8,23 +9,11 @@ const errorMessage = ref('')
 
 const fetchTodos = async () => {
   try {
-    const token = localStorage.getItem('access_token')
-    const response = await fetch('http://127.0.0.1:8000/api/todos/', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-      }
-    })
-
-    if (response.ok) {
-      const data = await response.json()
-      todos.value = Array.isArray(data) ? data : (data.results || [])
-    } else {
-      errorMessage.value = 'Görevler yüklenemedi.'
-    }
+    const response = await todosService.getAll()
+    const data = response.data
+    todos.value = Array.isArray(data) ? data : (data.results || [])
   } catch (err) {
-    errorMessage.value = 'Sunucuya bağlanılamadı: ' + err.message
+    errorMessage.value = 'Görevler yüklenemedi: ' + (err.message || 'Sunucu hatası')
   } finally {
     loading.value = false
   }
@@ -34,21 +23,12 @@ const addTodo = async () => {
   if (!newTodoTitle.value.trim()) return
 
   try {
-    const token = localStorage.getItem('access_token')
-    const response = await fetch('http://127.0.0.1:8000/api/todos/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-      },
-      body: JSON.stringify({ title: newTodoTitle.value, completed: false })
+    const response = await todosService.create({
+      title: newTodoTitle.value,
+      completed: false
     })
-
-    if (response.ok) {
-      const newTodo = await response.json()
-      todos.value.unshift(newTodo)
-      newTodoTitle.value = ''
-    }
+    todos.value.unshift(response.data)
+    newTodoTitle.value = ''
   } catch (err) {
     console.error('Görev eklenirken hata oluştu:', err)
   }
@@ -56,19 +36,8 @@ const addTodo = async () => {
 
 const toggleTodo = async (todo) => {
   try {
-    const token = localStorage.getItem('access_token')
-    const response = await fetch(`http://127.0.0.1:8000/api/todos/${todo.id}/`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-      },
-      body: JSON.stringify({ completed: !todo.completed })
-    })
-
-    if (response.ok) {
-      todo.completed = !todo.completed
-    }
+    await todosService.patch(todo.id, { completed: !todo.completed })
+    todo.completed = !todo.completed
   } catch (err) {
     console.error('Görev güncellenirken hata oluştu:', err)
   }
@@ -76,17 +45,8 @@ const toggleTodo = async (todo) => {
 
 const deleteTodo = async (id) => {
   try {
-    const token = localStorage.getItem('access_token')
-    const response = await fetch(`http://127.0.0.1:8000/api/todos/${id}/`, {
-      method: 'DELETE',
-      headers: {
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-      }
-    })
-
-    if (response.ok) {
-      todos.value = todos.value.filter(t => t.id !== id)
-    }
+    await todosService.delete(id)
+    todos.value = todos.value.filter(t => t.id !== id)
   } catch (err) {
     console.error('Görev silinirken hata oluştu:', err)
   }

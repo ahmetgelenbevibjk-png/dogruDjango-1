@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import userService from '@/modules/users/services/userService'
 
 const username = ref('')
 const name = ref('')
@@ -7,7 +8,7 @@ const phone = ref('')
 const website = ref('')
 const company = ref('')
 const email = ref('')
-const address = ref('') // Doğru değişken adı (address)
+const address = ref('')
 
 const message = ref('')
 const isError = ref(false)
@@ -18,7 +19,6 @@ const imagePreview = ref(null)
 // Sayfa yüklendiğinde kullanıcı bilgilerini çek
 onMounted(async () => {
   const storedUsername = localStorage.getItem('user_name')
-  const token = localStorage.getItem('access_token')
 
   if (!storedUsername) {
     isError.value = true
@@ -30,22 +30,19 @@ onMounted(async () => {
   username.value = storedUsername
 
   try {
-    const response = await fetch(`http://127.0.0.1:8000/api/users/${storedUsername}/`, {
-      headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) }
-    })
+    // userService.getById metodu ile kullanıcı verisini çekiyoruz
+    const response = await userService.getById(storedUsername)
+    const data = response.data
 
-    if (response.ok) {
-      const data = await response.json()
-      name.value = data.name || ''
-      phone.value = data.phone || ''
-      website.value = data.website || ''
-      company.value = data.company || ''
-      email.value = data.email || ''
-      address.value = data.address || '' // Backend'den gelen 'address' alanı ile eşlendi
+    name.value = data.name || ''
+    phone.value = data.phone || ''
+    website.value = data.website || ''
+    company.value = data.company || ''
+    email.value = data.email || ''
+    address.value = data.address || ''
 
-      if (data.avatar) {
-        imagePreview.value = data.avatar
-      }
+    if (data.avatar) {
+      imagePreview.value = data.avatar
     }
   } catch (err) {
     isError.value = true
@@ -66,7 +63,6 @@ const handleImageChange = (e) => {
 const handleUpdate = async () => {
   message.value = ''
   isError.value = false
-  const token = localStorage.getItem('access_token')
 
   const formData = new FormData()
   formData.append('name', name.value)
@@ -74,35 +70,25 @@ const handleUpdate = async () => {
   formData.append('website', website.value)
   formData.append('company', company.value)
   formData.append('email', email.value)
-  formData.append('address', address.value) // Doğru ref (address) gönderiliyor
+  formData.append('address', address.value)
 
   if (avatarFile.value instanceof File) {
     formData.append('avatar', avatarFile.value)
   }
 
   try {
-    const response = await fetch(`http://127.0.0.1:8000/api/users/${username.value}/`, {
-      method: 'PATCH',
-      headers: {
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-      },
-      body: formData
-    })
+    // userService.patch metodu ile güncellemeyi gönderiyoruz
+    const response = await userService.patch(username.value, formData)
+    const data = response.data
 
-    if (response.ok) {
-      const data = await response.json()
-      isError.value = false
-      message.value = 'Profil bilgileriniz başarıyla güncellendi!'
-      if (data.avatar) {
-        imagePreview.value = data.avatar
-      }
-    } else {
-      isError.value = true
-      message.value = 'Güncelleme başarısız oldu.'
+    isError.value = false
+    message.value = 'Profil bilgileriniz başarıyla güncellendi!'
+    if (data.avatar) {
+      imagePreview.value = data.avatar
     }
   } catch (err) {
     isError.value = true
-    message.value = 'Sunucuya bağlanılamadı.'
+    message.value = 'Güncelleme başarısız oldu.'
   }
 }
 </script>

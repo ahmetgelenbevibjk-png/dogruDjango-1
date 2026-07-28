@@ -1,9 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Users from '../components/Users.vue'
-import Todos from '../components/Todos.vue'
-import Profile from '../components/Profile.vue'
-import Posts from '../components/Posts.vue'
-import Albums from '../components/Albums.vue'
+import Users from '../modules/users/pages/Users.vue'
+import Todos from '../modules/Todos/pages/Todos.vue'
+import Profile from '../modules/Profile/pages/Profile.vue'
+import Posts from '../modules/Posts/pages/Posts.vue'
+import Albums from '../modules/Albums/pages/Albums.vue'
 const routes = [
   {
     path: '/',

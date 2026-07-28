@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import userService from '@/modules/users/services/userService' // <-- Servisimizi içe aktarıyoruz
 
 const users = ref([])
 const loading = ref(true)
@@ -7,23 +8,14 @@ const errorMessage = ref('')
 
 onMounted(async () => {
   try {
-    const token = localStorage.getItem('access_token')
-    const response = await fetch('http://127.0.0.1:8000/api/users/', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-      }
-    })
+    // Uzun fetch yerine tek satırla baseService'ten gelen getAll metodunu kullanıyoruz
+    const response = await userService.getAll()
 
-    if (response.ok) {
-      const data = await response.json()
-      users.value = Array.isArray(data) ? data : (data.results || [])
-    } else {
-      errorMessage.value = 'Kullanıcılar yüklenemedi.'
-    }
+    // Axios response.data içinde veriyi döndürür
+    const data = response.data
+    users.value = Array.isArray(data) ? data : (data.results || [])
   } catch (err) {
-    errorMessage.value = 'Sunucuya bağlanılamadı: ' + err.message
+    errorMessage.value = 'Kullanıcılar yüklenemedi: ' + (err.message || 'Sunucu hatası')
   } finally {
     loading.value = false
   }

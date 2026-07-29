@@ -94,7 +94,14 @@ const handleSubmit = async () => {
 
 <template>
   <div class="page-container">
-    <header class="top-nav">
+
+    <!-- EKRANIN ORTASINDAKİ KARŞILAMA KARTI -->
+    <main class="welcome-card">
+      <h1 class="welcome-title">Hoş Geldiniz</h1>
+      <p class="welcome-subtitle">
+        Sisteme erişmek ve içerikleri keşfetmek için lütfen giriş yapın veya yeni bir hesap oluşturun.
+      </p>
+
       <div class="nav-links">
         <a href="#" class="nav-item btn-signup" @click.prevent="openModal('register')">
           <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -108,8 +115,9 @@ const handleSubmit = async () => {
 
         <a href="#" class="nav-item btn-signin" @click.prevent="openModal('login')">Giriş Yap</a>
       </div>
-    </header>
+    </main>
 
+    <!-- MODAL PENCERESİ -->
     <div class="modal-overlay" v-if="activeModal" @click="closeModal">
       <div class="modal-box" @click.stop>
         <div class="modal-header">
@@ -189,35 +197,61 @@ const handleSubmit = async () => {
   box-sizing: border-box;
 }
 
+/* Ekranı dikey ve yatayda tam ortalayan ana alan */
 .page-container {
   min-height: 100vh;
   width: 100vw;
   background-color: var(--bg-color);
-  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
 }
 
-.top-nav {
-  position: absolute;
-  top: 25px;
-  left: 30px;
+/* Ortadaki Karşılama Kartı */
+.welcome-card {
+  background: #ffffff;
+  padding: 40px 32px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 440px;
+  width: 100%;
+}
+
+.welcome-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 8px;
+}
+
+.welcome-subtitle {
+  font-size: 14px;
+  color: #666666;
+  line-height: 1.5;
+  margin-bottom: 28px;
 }
 
 .nav-links {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 16px;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   text-decoration: none;
   font-size: 15px;
-  font-weight: 500;
-  padding: 10px 20px;
-  border-radius: 6px;
+  font-weight: 600;
+  padding: 12px 20px;
+  border-radius: 8px;
   transition: all 0.2s ease;
+  flex: 1; /* Butonları eşit genişlikte hizalar */
 }
 
 .btn-signup {
@@ -228,6 +262,7 @@ const handleSubmit = async () => {
 
 .btn-signup:hover {
   background-color: #4338ca;
+  transform: translateY(-1px);
 }
 
 .btn-signin {
@@ -237,14 +272,17 @@ const handleSubmit = async () => {
 }
 
 .btn-signin:hover {
-  background-color: #f0f0f0;
+  background-color: #f8f8f8;
+  border-color: #666;
+  transform: translateY(-1px);
 }
 
 .nav-icon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
+/* MODAL STİLLERİ */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -268,6 +306,7 @@ const handleSubmit = async () => {
   overflow-y: auto;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   position: relative;
+  text-align: left;
 }
 
 .modal-header {

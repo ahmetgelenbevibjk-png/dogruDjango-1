@@ -1,6 +1,14 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import userService from '@/modules/users/services/userService' // <-- Servisimizi içe aktarıyoruz
+import {useRouter} from 'vue-router';
+
+const router=useRouter();
+
+const goToUserDetail=(userId) =>{
+  router.push(`/user/${userId}`);
+}
+
 
 const users = ref([])
 const loading = ref(true)
@@ -29,7 +37,13 @@ onMounted(async () => {
     <div v-else-if="errorMessage" class="status-msg error">{{ errorMessage }}</div>
 
     <div v-else class="users-grid">
-      <div v-for="user in users" :key="user.id" class="user-card">
+      <!-- Kartın kendisine tıklama olayı eklendi -->
+      <div
+        v-for="user in users"
+        :key="user.id"
+        class="user-card"
+        @click="goToUserDetail(user.id)"
+      >
         <div class="card-header">
           <div class="avatar-container">
             <img v-if="user.avatar" :src="user.avatar" alt="Avatar" class="avatar-img" />
@@ -47,7 +61,7 @@ onMounted(async () => {
         <div class="card-divider"></div>
 
         <div class="card-details">
-          <!-- Location Alanı Düzeltildi -->
+          <!-- Location Alanı -->
           <div class="detail-item">
             <svg class="detail-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
@@ -61,6 +75,7 @@ onMounted(async () => {
             </div>
           </div>
 
+          <!-- Company Alanı -->
           <div class="detail-item">
             <svg class="detail-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
@@ -75,6 +90,7 @@ onMounted(async () => {
             </div>
           </div>
 
+          <!-- Website Alanı -->
           <div class="detail-item">
             <svg class="detail-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"></circle>
@@ -83,7 +99,8 @@ onMounted(async () => {
             </svg>
             <div class="detail-text">
               <span class="detail-label">Website</span>
-              <a v-if="user.website" :href="user.website" target="_blank" class="detail-value link">{{ user.website }}</a>
+              <!-- @click.stop ile web sitesine tıklandığında karta tıklama olayının tetiklenmesi engellendi -->
+              <a v-if="user.website" :href="user.website" target="_blank" class="detail-value link" @click.stop>{{ user.website }}</a>
               <span v-else class="detail-value">Website yok</span>
             </div>
           </div>
@@ -122,9 +139,12 @@ onMounted(async () => {
   transition: transform 0.2s, box-shadow 0.2s;
   display: flex;
   flex-direction: column;
+  cursor:pointer ;
+
 }
 
 .user-card:hover {
+  transform:translateY(-2px);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
 }
 

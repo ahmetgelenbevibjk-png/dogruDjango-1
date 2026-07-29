@@ -1,5 +1,13 @@
 <script setup>
 import { ref } from 'vue'
+import {onMounted} from 'vue'
+import {useTheme} from '@/composables/useTheme'
+
+const {isDark,toggleTheme,initTheme}=useTheme()
+onMounted(()=>{
+  initTheme()
+})
+
 
 // LocalStorage'dan veya varsayılan değerlerden kullanıcı bilgilerini alıyoruz
 const userName = ref(localStorage.getItem('user_name') || 'deneme5')
@@ -21,6 +29,16 @@ defineEmits(['logout'])
           <span class="user-email">{{ userEmail }}</span>
         </div>
       </router-link>
+
+      <!-- ➕ EKLENEN TEMA GEÇİŞ BUTONU -->
+      <button
+        class="theme-toggle-btn"
+        @click="toggleTheme"
+        :title="isDark ? 'Açık Temaya Geç' : 'Koyu Temaya Geç'"
+      >
+        <span v-if="isDark" class="theme-content">☀️ Açık Tema</span>
+        <span v-else class="theme-content">🌙 Koyu Tema</span>
+      </button>
     </div>
 
     <!-- Sağ Taraf: Çıkış Butonu -->
@@ -101,4 +119,25 @@ defineEmits(['logout'])
 .logout-btn:hover {
   background-color: #dc2626;
 }
+
+.theme-toggle-btn {
+  display : flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 14px;
+  border-radius:8px;
+  border:1px solid var(--border-color);
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.2s ease;
+  margin-left:20px;
+}
+.theme-toggle-btn:hover {
+  border-color: var(--accent-color);
+  transform: translateY(-1px);
+}
+
 </style>

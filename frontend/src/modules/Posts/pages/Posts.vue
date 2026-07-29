@@ -41,6 +41,21 @@ const fetchPosts = async () => {
   }
 };
 
+const deletePost = async (postId) => {
+  if (!confirm('Bu postu silmek istediğinizden emin misiniz?')) return;
+
+  try {
+    await axios.delete(`/posts/${postId}/`);
+    posts.value = posts.value.filter(post => post.id !== postId);
+    if (selectedPost.value && selectedPost.value.id === postId) {
+      closeModal();
+    }
+  } catch (error) {
+    console.error('Post silinirken hata oluştu:', error);
+    alert('Post silinemedi.');
+  }
+};
+
 const openModal = (post) => {
   selectedPost.value = post;
   isModalOpen.value = true;
@@ -102,6 +117,12 @@ onMounted(() => {
         <p class="post-body-snippet">{{ post.body }}</p>
 
         <div class="card-footer">
+          <button @click="deletePost(post.id)" class="delete-post-btn" title="Postu Sil">
+            <svg xmlns="http://www.w3.org/2000/svg" class="trash-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+
           <button @click="openModal(post)" class="see-more-btn">
             <span>See More</span>
             <svg xmlns="http://www.w3.org/2000/svg" class="arrow-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -294,7 +315,8 @@ onMounted(() => {
 
 .card-footer {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .see-more-btn {
@@ -313,6 +335,33 @@ onMounted(() => {
 .arrow-icon {
   width: 16px;
   height: 16px;
+}
+
+/* Silme Butonu Stilleri */
+.delete-post-btn {
+  background: #fff5f5;
+  border: 1px solid #fed7d7;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.delete-post-btn:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+  transform: scale(1.05);
+}
+
+.trash-icon {
+  width: 18px;
+  height: 18px;
+  color: #e53e3e;
 }
 
 /* Detay Penceresi (Modal) */
@@ -395,6 +444,8 @@ onMounted(() => {
   line-height: 1.7;
   overflow-y: auto;
   flex: 1;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 /* Modal Sağ Bölüm */

@@ -4,7 +4,7 @@ import Todos from '../modules/Todos/pages/Todos.vue'
 import Profile from '../modules/Profile/pages/Profile.vue'
 import Posts from '../modules/Posts/pages/Posts.vue'
 import Albums from '../modules/Albums/pages/Albums.vue'
-const routes = [
+import UserDetails from '../modules/usersDetail/pages/UserDetails.vue';const routes = [
   {
     path: '/',
     name: 'users',
@@ -29,6 +29,11 @@ const routes = [
     path: '/Albums',
     name: 'Albums',
     component: Albums
+  },
+ {
+    path: '/user/:id',
+    name: 'UserDetails',
+    component: () => import('../modules/usersDetail/pages/UserDetails.vue')
   }
 
 ]

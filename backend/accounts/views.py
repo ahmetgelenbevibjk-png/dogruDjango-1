@@ -1,3 +1,4 @@
+from core.views import BaseModelViewSet
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, viewsets
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -12,7 +13,7 @@ from .serializers import (
 
 
 
-class CustomUserViewSet(viewsets.ModelViewSet):
+class CustomUserViewSet(BaseModelViewSet):
     queryset = CustomUser.objects.all()
 
     def get_permissions(self):

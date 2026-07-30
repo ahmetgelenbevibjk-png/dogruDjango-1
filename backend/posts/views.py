@@ -1,3 +1,4 @@
+from core.views import BaseModelViewSet
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, BasePermission, SAFE_METHODS
 from .models import Post
@@ -16,7 +17,7 @@ class IsOwnerOrReadOnly(BasePermission):
         # Silme veya güncelleme için postun sahibi ile giriş yapan kullanıcı aynı olmalı
         return obj.author == request.user
 
-class PostViewSet(viewsets.ModelViewSet):
+class PostViewSet(BaseModelViewSet):
     serializer_class = PostSerializer
     # Burada hem giriş yapmış olma şartını hem de sadece sahibinin silebilmesi kuralını bağlıyoruz
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]

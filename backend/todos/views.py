@@ -1,9 +1,9 @@
-from rest_framework import viewsets
+from core.views import BaseModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from .models import Todo
 from .serializers import TodoSerializer
 
-class TodoViewSet(viewsets.ModelViewSet):
+class TodoViewSet(BaseModelViewSet):
     serializer_class = TodoSerializer
     permission_classes = [IsAuthenticated]
 

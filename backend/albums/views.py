@@ -1,9 +1,10 @@
+from core.views import BaseModelViewSet
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from .models import Album, AlbumImage
 from .serializers import AlbumSerializer, AlbumImageSerializer
 
-class AlbumViewSet(viewsets.ModelViewSet):
+class AlbumViewSet(BaseModelViewSet):
     serializer_class = AlbumSerializer
     permission_classes = [IsAuthenticated]
     queryset = Album.objects.all() # <-- Bu satırı ekledik
@@ -18,7 +19,7 @@ class AlbumViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-class AlbumImageViewSet(viewsets.ModelViewSet):
+class AlbumImageViewSet(BaseModelViewSet):
     serializer_class = AlbumImageSerializer
     permission_classes = [IsAuthenticated]
     queryset = AlbumImage.objects.all() # <-- Bu satırı ekledik

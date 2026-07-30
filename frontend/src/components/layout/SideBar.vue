@@ -14,7 +14,7 @@
           <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
           <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
         </svg>
-        <span>Users</span>
+        <span>{{ $t('nav.users') }}</span>
       </router-link>
 
       <!-- Todos Sekmesi (Router Link) -->
@@ -24,7 +24,7 @@
           <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
           <path d="m9 14 2 2 4-4"></path>
         </svg>
-        <span>Todos</span>
+        <span>{{ $t('nav.todos') }}</span>
       </router-link>
 
       <router-link to="/posts" class="menu-item" active-class="active">
@@ -34,7 +34,7 @@
           <line x1="16" y1="13" x2="8" y2="13"></line>
           <line x1="16" y1="17" x2="8" y2="17"></line>
         </svg>
-        <span>Posts</span>
+        <span>{{ $t('nav.posts') }}</span>
       </router-link>
 
       <!-- Albums Sekmesi -->
@@ -44,7 +44,7 @@
           <circle cx="8.5" cy="8.5" r="1.5"></circle>
           <polyline points="21 15 16 10 5 21"></polyline>
         </svg>
-        <span>Albums</span>
+        <span>{{ $t('nav.albums') }}</span>
       </router-link>
 
     </div>
@@ -75,7 +75,7 @@
   padding: 12px 20px;
   text-decoration: none;
   cursor: pointer;
-  color: #64748b;
+  color: var(--text-muted, #64748b); /* Koyu/Açık temaya göre otomatik uyarlanır */
   font-size: 15px;
   font-weight: 500;
   position: relative;
@@ -83,17 +83,15 @@
 }
 
 .menu-item:hover {
-  background-color: #f8fafc;
-  color: #1e293b;
+  background-color: var(--bg-main, #f8fafc);
+  color: var(--text-main, #1e293b);
 }
 
-/* Router-link aktif olduğunda bu sınıf otomatik eklenir */
 .menu-item.active {
-  background-color: #f1f5f9;
+  background-color: var(--bg-main, #f1f5f9);
   color: #7c3aed;
   font-weight: 600;
 }
-
 .menu-item.active::before {
   content: '';
   position: absolute;

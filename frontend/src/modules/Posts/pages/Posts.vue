@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import axios from '@/services/api';
+import CommentItem from '@/modules/Posts/pages/CommentItem.vue'; // Yolu kendi klasör yapınıza göre ayarlayın
 
 const posts = ref([]);
 const selectedPost = ref(null);
@@ -10,6 +11,19 @@ const loading = ref(false);
 const newPostTitle = ref('');
 const newPostBody = ref('');
 const isCreateModalOpen = ref(false);
+
+// Yanıt verme sistemi için state'ler
+const activeReplyCommentId = ref(null);
+const replyContent = ref('');
+
+const toggleReplyBox = (commentId) => {
+  if (activeReplyCommentId.value === commentId) {
+    activeReplyCommentId.value = null;
+  } else {
+    activeReplyCommentId.value = commentId;
+    replyContent.value = '';
+  }
+};
 
 const createPost = async () => {
   if (!newPostTitle.value.trim() || !newPostBody.value.trim()) return;
@@ -59,31 +73,59 @@ const deletePost = async (postId) => {
 const openModal = (post) => {
   selectedPost.value = post;
   isModalOpen.value = true;
+  activeReplyCommentId.value = null;
 };
 
 const closeModal = () => {
   selectedPost.value = null;
   isModalOpen.value = false;
   newComment.value = '';
+  activeReplyCommentId.value = null;
 };
 
-const addComment = async () => {
-  if (!newComment.value.trim() || !selectedPost.value) return;
+// Ana yorum veya alt yanıt ekleme fonksiyonu
+const addComment = async (parentId = null) => {
+  const content = parentId ? replyContent.value : newComment.value;
+  if (!content.trim() || !selectedPost.value) return;
 
   try {
     const response = await axios.post('/comments/', {
       post: selectedPost.value.id,
-      content: newComment.value
+      content: content,
+      parent: parentId
     });
 
-    if (!selectedPost.value.comments) {
-      selectedPost.value.comments = [];
+    if (parentId) {
+      const targetComment = findCommentById(selectedPost.value.comments, parentId);
+      if (targetComment) {
+        if (!targetComment.replies) targetComment.replies = [];
+        targetComment.replies.push(response.data);
+      }
+      activeReplyCommentId.value = null;
+      replyContent.value = '';
+    } else {
+      if (!selectedPost.value.comments) {
+        selectedPost.value.comments = [];
+      }
+      selectedPost.value.comments.push(response.data);
+      newComment.value = '';
     }
-    selectedPost.value.comments.push(response.data);
-    newComment.value = '';
   } catch (error) {
     console.error('Yorum eklenirken bir hata oluştu:', error);
   }
+};
+
+// Ağaç yapısındaki yorumu ID ile bulma yardımcı fonksiyonu
+const findCommentById = (comments, id) => {
+  if (!comments) return null;
+  for (const comment of comments) {
+    if (comment.id === id) return comment;
+    if (comment.replies && comment.replies.length > 0) {
+      const found = findCommentById(comment.replies, id);
+      if (found) return found;
+    }
+  }
+  return null;
 };
 
 onMounted(() => {
@@ -159,12 +201,16 @@ onMounted(() => {
           <h3 class="comments-title">Comments</h3>
 
           <div class="comments-scroll-area">
-            <div v-for="comment in selectedPost?.comments" :key="comment.id" class="comment-item">
-              <div class="comment-user-info">
-                <span class="comment-author">{{ comment.username || 'Anonim' }}</span>
-              </div>
-              <p class="comment-body">{{ comment.content }}</p>
-            </div>
+            <CommentItem
+              v-for="comment in selectedPost?.comments"
+              :key="comment.id"
+              :comment="comment"
+              :active-reply-comment-id="activeReplyCommentId"
+              :reply-content="replyContent"
+              @toggle-reply="toggleReplyBox"
+              @update:reply-content="replyContent = $event"
+              @submit-reply="addComment"
+            />
           </div>
 
           <!-- Sağ Alt Yorum Ekleme Alanı -->
@@ -173,10 +219,10 @@ onMounted(() => {
               v-model="newComment"
               type="text"
               placeholder="Add a comment..."
-              @keyup.enter="addComment"
+              @keyup.enter="addComment(null)"
               class="comment-input"
             />
-            <button @click="addComment" class="comment-send-btn">Post</button>
+            <button @click="addComment(null)" class="comment-send-btn">Post</button>
           </div>
 
         </div>
@@ -283,11 +329,12 @@ onMounted(() => {
 }
 
 .post-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background-color: var(--bg-card, #ffffff);
+  color: var(--text-main, #1e293b);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .post-title {
@@ -494,6 +541,42 @@ onMounted(() => {
   color: #4a5568;
   overflow-wrap: break-word;
   word-break: break-word;
+}
+
+/* Yanıtla Butonu Stilleri */
+.reply-toggle-btn {
+  background: none;
+  border: none;
+  color: #805ad5;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0 0 0;
+  margin-top: 4px;
+}
+
+.reply-toggle-btn:hover {
+  text-decoration: underline;
+}
+
+.reply-input-box {
+  margin-top: 8px;
+}
+
+/* Alt Yorumlar (Replies) Hiyerarşi Stili */
+.replies-list {
+  margin-left: 20px;
+  margin-top: 8px;
+  border-left: 2px solid #cbd5e0;
+  padding-left: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reply-item {
+  background: #edf2f7;
+  padding: 8px 10px;
 }
 
 /* Sağ Alt Yorum Ekleme Alanı */

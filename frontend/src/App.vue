@@ -38,13 +38,23 @@ body {
   font-family: 'Inter', sans-serif;
 }
 :root {
-  --bg-main:#f0f3f8;
+  --bg-main: #f8fafc;
+  --bg-header: #ffffff;
   --bg-card: #ffffff;
-  --bg-header:#ffffff;
-  --text-muted:#64748b;
-  --border-color:#e2e8f0;
-  --accent-color:#4f46e5;
-      }
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+}
+
+.dark {
+  --bg-main: #0f172a;
+  --bg-header: #1e293b;
+  --bg-card: #1e293b;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-color: #334155;
+}
+
 [data-theme="dark"] {
   --bg-main: #0f172a;        /* Derin koyu arka plan */
   --bg-card: #1e293b;        /* Kart arka planı */

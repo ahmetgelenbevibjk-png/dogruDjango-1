@@ -1,0 +1,3 @@
+.post-content, .album-description, p {
+  color: var(--text-main, #334155);
+}

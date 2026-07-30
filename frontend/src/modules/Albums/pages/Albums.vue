@@ -239,14 +239,12 @@ onMounted(() => {
 }
 
 .album-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background-color: var(--bg-card, #ffffff); /* Koyu temada koyu gri/lacivert olmalı */
+  color: var(--text-main, #1e293b);
+  border: 1px solid var(--border-color, #e2e8f0);
   border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .album-images-grid {

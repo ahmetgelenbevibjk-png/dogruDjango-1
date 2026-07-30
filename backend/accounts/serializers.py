@@ -1,5 +1,8 @@
-from rest_framework import serializers
+from django.conf import settings
+from django.contrib.auth.models import AbstractUser
+from django.db import models
 from .models import CustomUser, UserProfile, Company, Address
+from rest_framework import serializers
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -21,16 +24,23 @@ class RegisterSerializer(serializers.ModelSerializer):
             'company',
             'address',
             'location',
+            'role',  # <-- 1. BURAYA EKLENDİ
         )
 
     def create(self, validated_data):
         company_name = validated_data.pop('company', None)
-        # address veya location hangisi dolu geldiyse onu alıyoruz
         address_val = validated_data.pop('address', None) or validated_data.pop('location', None)
+
+        # Rol verisini alıyoruz (gelmezse modeldeki default değer geçerli olur)
+        user_role = validated_data.pop('role', 'user')
 
         address_obj = None
         if address_val:
             address_obj = Address.objects.create(street=address_val)
+
+        company_obj = None
+        if company_name:
+            company_obj, _ = Company.objects.get_or_create(name=company_name)
 
         user = CustomUser.objects.create_user(
             username=validated_data['username'],
@@ -40,11 +50,10 @@ class RegisterSerializer(serializers.ModelSerializer):
             phone=validated_data.get('phone', ''),
             website=validated_data.get('website', ''),
             address=address_obj,
+            company=company_obj,
+            role=user_role,  # <-- 2. BURADA create_user içine veriliyor
         )
         UserProfile.objects.get_or_create(user=user)
-
-        if company_name:
-            Company.objects.get_or_create(user=user, defaults={'name': company_name})
 
         return user
 
@@ -53,7 +62,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
     avatar = serializers.ImageField(source='profile.avatar', read_only=True)
     company = serializers.SerializerMethodField()
     address = serializers.SerializerMethodField()
-    location = serializers.SerializerMethodField()  # Frontend 'location' okuyorsa patlamasın diye
+    location = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
@@ -68,11 +77,12 @@ class CustomUserSerializer(serializers.ModelSerializer):
             'company',
             'address',
             'location',
+            'role',  # <-- 3. BURAYA EKLENDİ (Listeleme/Detayda görünmesi için)
         ]
 
     def get_company(self, obj):
-        if hasattr(obj, 'company_detail') and obj.company_detail:
-            return obj.company_detail.name
+        if obj.company:
+            return obj.company.name
         return None
 
     def get_address(self, obj):
@@ -104,18 +114,17 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             'company',
             'address',
             'location',
+            'role',  # <-- 4. BURAYA EKLENDİ (Güncellenebilmesi için)
         ]
         read_only_fields = ['username']
 
     def update(self, instance, validated_data):
         company_name = validated_data.pop('company', None)
-        # Frontend'den gelen 'address' veya 'location' verisini yakalıyoruz
         address_val = validated_data.pop('address', None) or validated_data.pop('location', None)
 
         profile_data = validated_data.pop('profile', {})
         avatar = profile_data.get('avatar')
 
-        # Adres bilgisi güncelleniyor veya oluşturuluyor
         if address_val is not None:
             if instance.address:
                 instance.address.street = address_val
@@ -124,19 +133,20 @@ class UserUpdateSerializer(serializers.ModelSerializer):
                 addr_obj = Address.objects.create(street=address_val)
                 instance.address = addr_obj
 
-        # Temel kullanıcı alanları güncelleniyor
+        # 'role' alanı validated_data içinde kaldığı için bu döngü (for)
+        # onu otomatik olarak güncelleyip instance'a atayacaktır.
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
+
+        if company_name is not None:
+            if company_name.strip() == "":
+                instance.company = None
+            else:
+                company_obj, _ = Company.objects.get_or_create(name=company_name)
+                instance.company = company_obj
+
         instance.save()
 
-        # Şirket bilgisi güncelleniyor
-        if company_name is not None:
-            Company.objects.update_or_create(
-                user=instance,
-                defaults={'name': company_name}
-            )
-
-        # Avatar güncelleniyor
         if avatar is not None:
             profile, _ = UserProfile.objects.get_or_create(user=instance)
             profile.avatar = avatar

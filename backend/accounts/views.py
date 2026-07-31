@@ -30,6 +30,14 @@ class CustomUserViewSet(BaseModelViewSet):
             return UserUpdateSerializer
         return CustomUserSerializer
 
+    def get_serializer_context(self):
+        # Serializer'a istek bağlamını (request) aktararak rol güvenliğinin çalışmasını sağlar
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
+    
+
     def get_object(self):
         pk_or_username = self.kwargs.get('pk') or self.kwargs.get('username')
 

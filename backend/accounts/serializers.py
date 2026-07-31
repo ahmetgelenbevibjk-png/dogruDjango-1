@@ -24,7 +24,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             'company',
             'address',
             'location',
-            'role',  # <-- 1. BURAYA EKLENDİ
+            'role',
         )
 
     def create(self, validated_data):
@@ -51,7 +51,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             website=validated_data.get('website', ''),
             address=address_obj,
             company=company_obj,
-            role=user_role,  # <-- 2. BURADA create_user içine veriliyor
+            role=user_role,
         )
         UserProfile.objects.get_or_create(user=user)
 
@@ -77,7 +77,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
             'company',
             'address',
             'location',
-            'role',  # <-- 3. BURAYA EKLENDİ (Listeleme/Detayda görünmesi için)
+            'role',
         ]
 
     def get_company(self, obj):
@@ -114,11 +114,16 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             'company',
             'address',
             'location',
-            'role',  # <-- 4. BURAYA EKLENDİ (Güncellenebilmesi için)
+            'role',
         ]
         read_only_fields = ['username']
 
     def update(self, instance, validated_data):
+        # Güvenlik Kontrolü: İsteyen kişi admin/staff değilse rol değiştirmesini engelle
+        request = self.context.get('request')
+        if request and not (request.user.is_staff or getattr(request.user, 'role', '') == 'admin'):
+            validated_data.pop('role', None)
+
         company_name = validated_data.pop('company', None)
         address_val = validated_data.pop('address', None) or validated_data.pop('location', None)
 
@@ -133,8 +138,6 @@ class UserUpdateSerializer(serializers.ModelSerializer):
                 addr_obj = Address.objects.create(street=address_val)
                 instance.address = addr_obj
 
-        # 'role' alanı validated_data içinde kaldığı için bu döngü (for)
-        # onu otomatik olarak güncelleyip instance'a atayacaktır.
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
 

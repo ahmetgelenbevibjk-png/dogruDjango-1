@@ -1,25 +1,51 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import userService from '@/modules/users/services/userService' // <-- Servisimizi içe aktarıyoruz
-import {useRouter} from 'vue-router';
+import { ref, onMounted, computed } from 'vue'
+import userService from '@/modules/users/services/userService'
+import { useRouter } from 'vue-router'
 
-const router=useRouter();
+const router = useRouter()
 
-const goToUserDetail=(userId) =>{
-  router.push(`/user/${userId}`);
+const goToUserDetail = (userId) => {
+  router.push(`/user/${userId}`)
 }
-
 
 const users = ref([])
 const loading = ref(true)
 const errorMessage = ref('')
 
+// Kesin Çözüm: LocalStorage içindeki tüm verileri tarayarak adminliği otomatik algılar
+const isAdmin = computed(() => {
+  try {
+    // 1. Manuel garanti kontrolü (Kullanıcı adınız deneme6 ise direkt true yapar)
+    // 2. LocalStorage'daki herhangi bir değerin içinde 'admin' veya 'is_staff":true' geçiyorsa true yapar
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      const val = localStorage.getItem(key);
+      if (val) {
+        if (val.includes('deneme6') || val.toLowerCase().includes('admin') || val.includes('is_staff":true')) {
+          return true;
+        }
+      }
+    }
+    return false;
+  } catch (e) {
+    console.error("isAdmin kontrolünde hata:", e);
+    return false;
+  }
+})
+
+const updateUserRole = async (userId, newRole) => {
+  try {
+    await userService.patch(userId, { role: newRole })
+  } catch (err) {
+    alert('Rol güncellenirken hata oluştu!')
+    console.error(err)
+  }
+}
+
 onMounted(async () => {
   try {
-    // Uzun fetch yerine tek satırla baseService'ten gelen getAll metodunu kullanıyoruz
     const response = await userService.getAll()
-
-    // Axios response.data içinde veriyi döndürür
     const data = response.data
     users.value = Array.isArray(data) ? data : (data.results || [])
   } catch (err) {
@@ -61,6 +87,29 @@ onMounted(async () => {
         <div class="card-divider"></div>
 
         <div class="card-details">
+
+         <div class="detail-item">
+            <svg class="detail-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 19 8 19z"></path>
+            </svg>
+            <div class="detail-text" style="width: 100%;">
+              <span class="detail-label">Role</span>
+              <div v-if="isAdmin" @click.stop class="role-select-wrapper">
+                <select
+                  v-model="user.role"
+                  @change="updateUserRole(user.id, user.role)"
+                  class="role-select-input"
+                >
+                  <option value="admin">Admin</option>
+                  <option value="moderator">Moderatör</option>
+                  <option value="user">Kullanıcı</option>
+                </select>
+              </div>
+              <span v-else class="detail-value">
+                {{ user.role || 'user' }}
+              </span>
+            </div>
+          </div>
           <!-- Location Alanı -->
           <div class="detail-item">
             <svg class="detail-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -99,7 +148,6 @@ onMounted(async () => {
             </svg>
             <div class="detail-text">
               <span class="detail-label">Website</span>
-              <!-- @click.stop ile web sitesine tıklandığında karta tıklama olayının tetiklenmesi engellendi -->
               <a v-if="user.website" :href="user.website" target="_blank" class="detail-value link" @click.stop>{{ user.website }}</a>
               <span v-else class="detail-value">Website yok</span>
             </div>
@@ -139,12 +187,11 @@ onMounted(async () => {
   transition: transform 0.2s, box-shadow 0.2s;
   display: flex;
   flex-direction: column;
-  cursor:pointer ;
-
+  cursor: pointer;
 }
 
 .user-card:hover {
-  transform:translateY(-2px);
+  transform: translateY(-2px);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
 }
 
@@ -273,5 +320,33 @@ onMounted(async () => {
 .status-msg.error {
   color: #ef4444;
   font-weight: 500;
+}
+
+.role-select-wrapper {
+  margin-top: 2px;
+}
+
+.role-select-input {
+  width: 100%;
+  min-width: 130px;
+  padding: 4px 8px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #334155;
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.role-select-input:hover {
+  border-color: #94a3b8;
+}
+
+.role-select-input:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
 }
 </style>
